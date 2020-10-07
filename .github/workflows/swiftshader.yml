@@ -1,0 +1,41 @@
+name: SwiftShader
+
+on:
+  push:
+    branches:
+      - rc/**
+      - pr/**
+
+jobs:
+  swiftshader:
+    name: Test Filament + Vulkan + SwiftShader
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2.0.0
+
+    - name: Download Image with Pre-Built SwiftShader
+      run: |
+          docker pull ghcr.io/filament-assets/swiftshader:latest
+          docker tag ghcr.io/filament-assets/swiftshader:latest ssfilament
+
+    - name: Build Filament with SwiftShader Support
+      run: |
+          docker run -v `pwd`:/trees/branch ssfilament branch/build.sh -t release gltf_viewer
+
+    - name: Test Filament with SwiftShader
+      continue-on-error: false # Temporarily set this to true to see the upload artifact on failure.
+      timeout-minutes: 2
+      run: |
+          export SPEC=/trees/branch/libs/viewer/tests/basic.json
+          export TEST=/trees/branch/out/cmake-release/samples/gltf_viewer
+          export ARGS='--headless -a vulkan'
+          mkdir results
+          docker run -tv `pwd`:/trees/branch -w /trees/branch/results ssfilament $TEST --batch $SPEC $ARGS
+
+    # The results folder contains screenshots and settings files.
+    - uses: actions/upload-artifact@v2
+      with:
+        name: results
+        path: results
+        if-no-files-found: error
