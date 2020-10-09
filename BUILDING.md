@@ -484,7 +484,7 @@ docker run -it ghcr.io/filament-assets/swiftshader
 You can also make your local Filament branch available to the Docker container (which keeps
 all its code in `/trees`) :
 
-    docker run -it -v ~/github/filament:/trees/branch ghcr.io/filament-assets/swiftshader
+    docker run -it -v `pwd`:/trees/branch ghcr.io/filament-assets/swiftshader
 
 If you are a team member, you can update the public image to the latest SwiftShader by
 following the instructions at the top of `Dockerfile`.

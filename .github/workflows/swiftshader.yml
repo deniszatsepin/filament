@@ -3,8 +3,9 @@ name: SwiftShader
 on:
   push:
     branches:
-      - rc/**
-      - pr/**
+      - 'rc/**'
+      - 'pr/action3' # TODO: remove this line
+      - '**/trigger/swiftshader'
 
 jobs:
   swiftshader:
@@ -22,16 +23,24 @@ jobs:
     - name: Build Filament with SwiftShader Support
       run: |
           docker run -v `pwd`:/trees/branch ssfilament branch/build.sh -t release gltf_viewer
+          mkdir results
 
     - name: Test Filament with SwiftShader
       continue-on-error: false # Temporarily set this to true to see the upload artifact on failure.
-      timeout-minutes: 2
-      run: |
-          export SPEC=/trees/branch/libs/viewer/tests/basic.json
-          export TEST=/trees/branch/out/cmake-release/samples/gltf_viewer
-          export ARGS='--headless -a vulkan'
-          mkdir results
-          docker run -tv `pwd`:/trees/branch -w /trees/branch/results ssfilament $TEST --batch $SPEC $ARGS
+      timeout-minutes: 15
+      run: >
+          docker run
+          --cap-add=SYS_PTRACE
+          --security-opt seccomp=unconfined
+          --security-opt apparmor=unconfined
+          -t
+          -v `pwd`:/trees/branch
+          -w /trees/branch/results ssfilament
+          /usr/bin/catchsegv
+          /trees/branch/out/cmake-release/samples/gltf_viewer
+          --headless
+          --batch /trees/branch/libs/viewer/tests/basic.json
+          -a vulkan
 
     # The results folder contains screenshots and settings files.
     - uses: actions/upload-artifact@v2
