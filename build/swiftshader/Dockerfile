@@ -40,10 +40,15 @@ RUN set -eux ;\
     update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 ;\
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
 
-# Clone and build SwiftShader.
+# Get patch files from the local Filament tree.
+COPY build/swiftshader/*.diff .
+
+# Clone SwiftShader, apply patches, and build it.
 RUN set -eux ;\
 	git clone https://swiftshader.googlesource.com/SwiftShader swiftshader ;\
     cd swiftshader ;\
+	git checkout 139f5c3 ;\
+	git apply /trees/*.diff ;\
     cd build ;\
     cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release ;\
     ninja
